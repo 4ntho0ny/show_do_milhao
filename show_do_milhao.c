@@ -28,7 +28,7 @@ typedef struct {
 
 void carregar_perguntas(pergunta *perguntas);
 void carregar_perguntas_por_nivel(pergunta *todas_perguntas, pergunta *perguntas_por_nivel, int nvl_atual);
-int sortear_pergunta(int qtd_perguntas);
+int sortear(int qtd);
 int verificar_posicao_existe(pergunta *perguntas, int posicao_pergunta, int qtd_perguntas);
 void imprimir_pergunta(pergunta pergunta);
 // int entrada_invalida(char entrada);
@@ -37,9 +37,11 @@ void msg_derrota();
 void msg_vitoria();
 void imprimir_ajuda(int *ajudas);
 void diminuir_quantidade_ajuda(int *ajudas, int id_ajuda);
-int utilizar_ajuda(int *ajudas, int id_ajuda);
+int utilizar_ajuda(int *ajudas, int id_ajuda, pergunta pergunta_atual);
 
 int main() {
+    srand(time(0));
+
     FILE *file;
     
     pergunta todas_perguntas[QTD_PERGUNTAS_TOTAL];
@@ -89,7 +91,7 @@ int main() {
         while (qtd_perguntas_repondidas < qtd_respostas_nvl)
         {
             if (nao_sortear_pergunta == 0) {
-                pergunta_sorteada = sortear_pergunta(qtd_perguntas_nvl);
+                pergunta_sorteada = sortear(qtd_perguntas_nvl);
                 pergunta_atual = perguntas_por_nivel[pergunta_sorteada];
             }
 
@@ -111,7 +113,7 @@ int main() {
             }
             else if (entrada == INPUT_1 || entrada == INPUT_2 || entrada == INPUT_3 || entrada == INPUT_4) {
 
-                ajuda_utilizada = utilizar_ajuda(ajudas, (int)(entrada - '0') - 1);
+                ajuda_utilizada = utilizar_ajuda(ajudas, (int)(entrada - '0') - 1, pergunta_atual);
                 if (ajuda_utilizada == 0) {
                     nao_sortear_pergunta = 1;
                     continue;
@@ -145,12 +147,12 @@ int main() {
             break;
 
         if (nvl_atual == 1) {
-            val_acumulado = 10000.00;
-            val_pergunta = 10000.00;
+            val_acumulado = 10000.0;
+            val_pergunta = 10000.0;
         }
         else if (nvl_atual == 2) {
-            val_acumulado = 100000.00;
-            val_pergunta = 100000.00;
+            val_acumulado = 100000.0;
+            val_pergunta = 100000.0;
         }
         else if (nvl_atual == 4) {
             msg_vitoria();
@@ -204,10 +206,9 @@ void carregar_perguntas_por_nivel(pergunta *todas_perguntas, pergunta *perguntas
     }
 }
 
-int sortear_pergunta(int qtd_perguntas) {
-    srand(time(0));
+int sortear(int qtd) {
 
-    return (rand() % qtd_perguntas);
+    return (rand() % qtd);
 }
 
 void imprimir_pergunta(pergunta pergunta) {
@@ -267,7 +268,7 @@ void diminuir_quantidade_ajuda(int *ajudas, int id_ajuda) {
     printf("\n");
 }
 
-int utilizar_ajuda(int *ajudas, int id_ajuda) {
+int utilizar_ajuda(int *ajudas, int id_ajuda, pergunta pergunta_atual) {
     int ajuda_utilizada = 0;
 
     if (id_ajuda == 0 && ajudas[id_ajuda] > 0) {
@@ -285,3 +286,36 @@ int utilizar_ajuda(int *ajudas, int id_ajuda) {
 
     return ajuda_utilizada;
 }
+
+// void desenhar_cartas() {
+//     printf(" _______   _______   _______   _______\n");
+//     printf("|       | |       | |       | |       |\n");
+//     printf("|       | |       | |       | |       |\n");
+//     printf("|       | |       | |       | |       |\n");
+//     printf("|_______| |_______| |_______| |_______|\n");
+//     printf("    1         2         3         4   \n");
+// }
+
+// void sortear_cartas(int *cartas) {
+//     int numero_respostas_tiradas;
+//     for (int i = 0; i < 4; i++)
+//     {
+//         numero_respostas_tiradas = sortear(4);
+//         cartas[i] = numero_respostas_tiradas;
+//     }
+    
+// };
+
+// void ajuda_cartas(pergunta pergunta_atual) {
+//     int cartas[4] = (int *) malloc(4 * sizeof(int));
+//     int carta_escolhida;
+//     sortear_cartas(cartas);
+
+//     printf("\n********** Ajuda das Cartas **********\n\n");
+//     desenhar_cartas();
+//     printf("Escolha uma carta (1-4): ");
+//     scanf("%d", &carta_escolhida);
+
+
+
+// }
