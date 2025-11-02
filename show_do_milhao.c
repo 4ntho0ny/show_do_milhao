@@ -8,10 +8,10 @@
 #define QTD_PERGUNTAS_NIVEL_4 10
 
 typedef enum {
-    INPUT_A = 'A',
-    INPUT_B = 'B',
-    INPUT_C = 'C',
-    INPUT_D = 'D',
+    INPUT_A = 'a',
+    INPUT_B = 'b',
+    INPUT_C = 'c',
+    INPUT_D = 'd',
     INPUT_1 = '1',
     INPUT_2 = '2',
     INPUT_3 = '3',
@@ -31,10 +31,13 @@ void carregar_perguntas_por_nivel(pergunta *todas_perguntas, pergunta *perguntas
 int sortear_pergunta(int qtd_perguntas);
 int verificar_posicao_existe(pergunta *perguntas, int posicao_pergunta, int qtd_perguntas);
 void imprimir_pergunta(pergunta pergunta);
-int entrada_invalida(char entrada);
+// int entrada_invalida(char entrada);
 void eliminar_pergunta(pergunta *perguntas, int posicao_pergunta, int qtd_perguntas);
 void msg_derrota();
 void msg_vitoria();
+void imprimir_ajuda(int *ajudas);
+void diminuir_quantidade_ajuda(int *ajudas, int id_ajuda);
+int utilizar_ajuda(int *ajudas, int id_ajuda);
 
 int main() {
     FILE *file;
@@ -50,6 +53,8 @@ int main() {
     int qtd_respostas_nvl = 5;
     int pergunta_sorteada;
     int nao_sortear_pergunta = 0;
+    int ajudas[4] = {3,3,3,3};
+    int ajuda_utilizada = 0;
 
     float val_pergunta = 1000.0;
     float val_acumulado = 0.0;
@@ -88,38 +93,47 @@ int main() {
                 pergunta_atual = perguntas_por_nivel[pergunta_sorteada];
             }
 
+            // =========== Vizualição da pergunta e opções ===========
             printf("== ------------\n");
             printf("== Pergunta %d - Nivel %d\n\n", qtd_perguntas_repondidas + 1, nvl_atual);            
             printf("== Voce possui um total acumulado de R$ %.2f ==\n\n", val_acumulado);
-
             imprimir_pergunta(pergunta_atual);
-            
-            // imprimir opções de ajuda
-
+            imprimir_ajuda(ajudas);
             printf("~~~~~~~~~~~~~~~\n\n");
+            // =======================================================
 
             printf("Digite sua resposta: ");
             scanf(" %c", &entrada);
             
-            entrada = toupper(entrada);
-
-            if ((nao_sortear_pergunta = entrada_invalida(entrada))) {
-                
-                printf("\nXXXXXXXXX Entrada Invalida XXXXXXXXX\n\n");               
-                continue;
-            }
-
-            // if (entrada != toupper(pergunta_atual.alt_correta)) {
-            if (entrada != toupper(pergunta_atual.alt_correta)) {
-                msg_derrota();
+            if (entrada == INPUT_5) {
                 running = 0;
                 break;
             }
+            else if (entrada == INPUT_1 || entrada == INPUT_2 || entrada == INPUT_3 || entrada == INPUT_4) {
+
+                ajuda_utilizada = utilizar_ajuda(ajudas, (int)(entrada - '0') - 1);
+                if (ajuda_utilizada == 0) {
+                    nao_sortear_pergunta = 1;
+                    continue;
+                }
+
+            }
+            else if (entrada == INPUT_A || entrada == INPUT_B || entrada == INPUT_C || entrada == INPUT_D)  {
+
+                if (toupper(entrada) != toupper(pergunta_atual.alt_correta)) {
+                    msg_derrota();
+                    running = 0;
+                    break;
+                }
+
+                printf("\n********** Certa Resposta! **********\n\n");
+            }
+            else {
+                printf("\nXXXXXXXXX Entrada Invalida XXXXXXXXX\n\n");   
+                nao_sortear_pergunta = 1;
+                continue;
+            }
             
-            printf("\n********** Certa Resposta! **********\n\n");
-
-            // Validar ajuda
-
             eliminar_pergunta(perguntas_por_nivel, pergunta_sorteada, qtd_perguntas_nvl);
  
             val_acumulado += val_pergunta;
@@ -201,16 +215,9 @@ void imprimir_pergunta(pergunta pergunta) {
         printf("%s\n", pergunta.descricao);
         for (int j = 0; j < 4; j++) {
             printf(" %c) %s\n", 'a' + j, pergunta.alt[j]);
-        }            
-}
+        }
 
-int entrada_invalida(char entrada) {
-    if (entrada != INPUT_A && entrada != INPUT_B && entrada != INPUT_C && 
-        entrada != INPUT_D && entrada != INPUT_1 && entrada != INPUT_2 && 
-        entrada != INPUT_3 && entrada != INPUT_4 && entrada != INPUT_5)
-        return 1;
-    
-    return 0;
+        printf("\n");
 }
 
 void eliminar_pergunta(pergunta *perguntas, int posicao_pergunta, int qtd_perguntas) {
@@ -234,4 +241,47 @@ void msg_vitoria() {
     printf("\n*****************************************\n");
     printf("\n********** VOCE GANHOU R$ 1.000.000! ****\n");
     printf("\n*****************************************\n\n");
+}
+
+void imprimir_ajuda(int *ajudas) {
+    printf("-- Ajuda --\n");
+    printf("[1] Pular pergunta (%d)\n", ajudas[0]);
+    printf("[2] Pedir ajuda a plateia (%d)\n", ajudas[1]);
+    printf("[3] Pedir ajuda aos universitarios (%d)\n", ajudas[2]);
+    printf("[4] Pedir ajuda as cartas (%d)\n", ajudas[3]);
+    printf("[5] Parar\n");
+}
+
+void diminuir_quantidade_ajuda(int *ajudas, int id_ajuda) {
+    
+    if (id_ajuda < 0 || id_ajuda > 3) {
+        printf("Ajuda inválida.\n");
+    }
+    else if (ajudas[id_ajuda] > 0) {
+        ajudas[id_ajuda]--;
+        printf("\nAjuda %d utilizada. Restam %d.\n", id_ajuda + 1, ajudas[id_ajuda]);
+    } else {
+        printf("\nXXXXXXXXX Voce ja utilizou todas as ajudas da opcao %d. XXXXXXXXX\n", id_ajuda + 1);
+    }
+
+    printf("\n");
+}
+
+int utilizar_ajuda(int *ajudas, int id_ajuda) {
+    int ajuda_utilizada = 0;
+
+    if (id_ajuda == 0 && ajudas[id_ajuda] > 0) {
+        printf("\n********** Pergunta Pulada! **********\n\n");
+        ajuda_utilizada = 1;
+    } else if (id_ajuda == 2 && ajudas[id_ajuda] > 0) {
+        ajuda_utilizada = 1;
+    } else if (id_ajuda == 3 && ajudas[id_ajuda] > 0) {
+        ajuda_utilizada = 1;
+    } else if (id_ajuda == 4 && ajudas[id_ajuda] > 0) {
+        ajuda_utilizada = 1;
+    }
+
+    diminuir_quantidade_ajuda(ajudas, id_ajuda);
+
+    return ajuda_utilizada;
 }
