@@ -346,6 +346,8 @@ int ajuda_cartas(pergunta pergunta_atual) {
             msg_resposta_invalida();
             continue;
         }
+
+        break;
     }
     
     return cartas[carta_escolhida - 1];
