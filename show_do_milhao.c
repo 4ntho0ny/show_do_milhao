@@ -26,6 +26,7 @@ typedef struct {
     char alt_correta;
 } pergunta;
 
+#pragma region FUNCTIONS
 void carregar_perguntas(pergunta *perguntas);
 void carregar_perguntas_por_nivel(pergunta *todas_perguntas, pergunta *perguntas_por_nivel, int nvl_atual);
 int sortear(int qtd);
@@ -43,10 +44,12 @@ int utilizar_ajuda(int *ajudas, int id_ajuda, pergunta pergunta_atual);
 int ajuda_cartas(pergunta pergunta_atual);
 void retirar_resposta_incorreta(int quantidade_resposta_incorretas, pergunta pergunta_atual);
 char ler_entrada();
+#pragma endregion
 
 int main() {
     srand(time(0));
 
+    #pragma region VARIABLES
     FILE *file;
     
     pergunta todas_perguntas[QTD_PERGUNTAS_TOTAL];
@@ -68,6 +71,7 @@ int main() {
     float val_acumulado = 0.0;
 
     char entrada;
+    #pragma endregion
 
     carregar_perguntas(todas_perguntas);
 
@@ -193,7 +197,6 @@ int main() {
 }
 
 #pragma region FUNCTIONS
-
 void msg_resposta_invalida() {
     printf("\nXXXXXXXXX Resposta Invalida XXXXXXXXX\n\n");
 }
@@ -333,10 +336,18 @@ int ajuda_cartas(pergunta pergunta_atual) {
 
     sortear_cartas(cartas);
 
-    desenhar_cartas();
-    printf("Escolha uma carta (1-4): ");
-    scanf("%d", &carta_escolhida);
-
+    while (1)
+    {
+        desenhar_cartas();
+        printf("Escolha uma carta (1-4): ");
+        scanf("%d", &carta_escolhida);
+        
+        if (carta_escolhida < 1 || carta_escolhida > 4) {
+            msg_resposta_invalida();
+            continue;
+        }
+    }
+    
     return cartas[carta_escolhida - 1];
 }
 
@@ -360,5 +371,4 @@ void retirar_resposta_incorreta(int quantidade_resposta_incorretas, pergunta per
     }
     printf("\n");
 }
-
 #pragma endregion
