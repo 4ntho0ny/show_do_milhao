@@ -42,8 +42,9 @@ void imprimir_ajuda(int *ajudas);
 int diminuir_quantidade_ajuda(int *ajudas, int id_ajuda);
 int utilizar_ajuda(int *ajudas, int id_ajuda, pergunta pergunta_atual);
 int ajuda_cartas(pergunta pergunta_atual);
-void retirar_resposta_incorreta(int quantidade_resposta_incorretas, pergunta pergunta_atual);
+pergunta retirar_resposta_incorreta(int quantidade_resposta_incorretas, pergunta pergunta_atual);
 char ler_entrada();
+int pergunta_atual_ajuda_cartas(pergunta pergunta_atual);
 #pragma endregion
 
 int main() {
@@ -118,7 +119,6 @@ int main() {
 
             if (entrada == INPUT_5) {
                 running = 0;
-                break;
             }
             else if (entrada == INPUT_1 || entrada == INPUT_2 || entrada == INPUT_3 || entrada == INPUT_4) {
                 id_ajuda = (int)(entrada - '0') - 1;                
@@ -135,16 +135,9 @@ int main() {
                 } else if (id_ajuda == 2) {
                 } else if (id_ajuda == 3) {                    
                     int carta_escolhida = ajuda_cartas(pergunta_atual);
-                    retirar_resposta_incorreta(carta_escolhida, pergunta_atual);
+                    pergunta_atual = retirar_resposta_incorreta(carta_escolhida, pergunta_atual);
 
-                    entrada = ler_entrada();
-                    if (toupper(entrada) != toupper(pergunta_atual.alt_correta)) {
-                        msg_derrota();
-                        running = 0;
-                        break;
-                    }
-
-                    msg_resposta_certa();
+                    running = pergunta_atual_ajuda_cartas(pergunta_atual);
                 }
             }
             else if (entrada == INPUT_A || entrada == INPUT_B || entrada == INPUT_C || entrada == INPUT_D)  {
@@ -152,10 +145,10 @@ int main() {
                 if (toupper(entrada) != toupper(pergunta_atual.alt_correta)) {
                     msg_derrota();
                     running = 0;
-                    break;
                 }
-
-                msg_resposta_certa();
+                else {
+                    msg_resposta_certa();
+                }
             }
             else {
                 msg_resposta_invalida();
@@ -163,6 +156,9 @@ int main() {
                 continue;
             }
             
+            if (running == 0)
+                break;
+
             eliminar_pergunta(perguntas_por_nivel, pergunta_sorteada, qtd_perguntas_nvl);
  
             val_acumulado += val_pergunta;
@@ -250,12 +246,13 @@ int sortear(int qtd) {
 
 void imprimir_pergunta(pergunta pergunta) {
 
-        printf("%s\n", pergunta.descricao);
-        for (int j = 0; j < 4; j++) {
-            printf(" %c) %s\n", 'a' + j, pergunta.alt[j]);
+    printf("%s\n", pergunta.descricao);
+    for (int i = 0; i < 4; i++) {
+        if (pergunta.alt[i][0] != '\0') {
+            printf(" %c) %s\n", 'a' + i, pergunta.alt[i]);
         }
-
-        printf("\n");
+    }
+    printf("\n");
 }
 
 void eliminar_pergunta(pergunta *perguntas, int posicao_pergunta, int qtd_perguntas) {
@@ -353,7 +350,7 @@ int ajuda_cartas(pergunta pergunta_atual) {
     return cartas[carta_escolhida - 1];
 }
 
-void retirar_resposta_incorreta(int quantidade_resposta_incorretas, pergunta pergunta_atual) {
+pergunta retirar_resposta_incorreta(int quantidade_resposta_incorretas, pergunta pergunta_atual) {
     int respostas_removidas = 0;
 
     while (respostas_removidas < quantidade_resposta_incorretas) {
@@ -365,12 +362,39 @@ void retirar_resposta_incorreta(int quantidade_resposta_incorretas, pergunta per
         }
     }
 
-    printf("%s\n", pergunta_atual.descricao);
-    for (int i = 0; i < 4; i++) {
-        if (pergunta_atual.alt[i][0] != '\0') {
-            printf(" %c) %s\n", 'a' + i, pergunta_atual.alt[i]);
+    printf("\n%d resposta(s) incorreta(s) removida(s)!\n\n", quantidade_resposta_incorretas);
+    
+    return pergunta_atual;
+}
+
+int pergunta_atual_ajuda_cartas(pergunta pergunta_atual) {
+    char entrada;
+    int running = 1;
+
+    while (1)
+    {                        
+        imprimir_pergunta(pergunta_atual);        
+        
+        entrada = ler_entrada();
+
+        if (entrada == INPUT_5) {
+            running = 0;
+        }        
+        else if (entrada != INPUT_A && entrada != INPUT_B && entrada != INPUT_C && entrada != INPUT_D) {
+            msg_resposta_invalida();
+            continue;
         }
+        else if (toupper(entrada) != toupper(pergunta_atual.alt_correta)) {
+            msg_derrota();
+            running = 0;
+        }
+        else {
+            msg_resposta_certa();
+        }
+
+        break;
     }
-    printf("\n");
+
+    return running;
 }
 #pragma endregion
