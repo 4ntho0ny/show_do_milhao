@@ -156,6 +156,7 @@ int main() {
                 }
                 else {
                     msg_resposta_certa();
+                    nao_sortear_pergunta = 0;
                 }
             }
             else {
