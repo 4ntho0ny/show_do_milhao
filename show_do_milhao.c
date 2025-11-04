@@ -44,7 +44,8 @@ int utilizar_ajuda(int *ajudas, int id_ajuda, pergunta pergunta_atual);
 int ajuda_cartas(pergunta pergunta_atual);
 pergunta retirar_resposta_incorreta(int quantidade_resposta_incorretas, pergunta pergunta_atual);
 char ler_entrada();
-int pergunta_atual_ajuda_cartas(pergunta pergunta_atual);
+int pergunta_atual_ajuda(pergunta pergunta_atual);
+void gerar_votos_alternativas(int qtd_votos, int percentual_correta, char alt_correta);
 #pragma endregion
 
 int main() {
@@ -131,13 +132,20 @@ int main() {
                 if (id_ajuda == 0) {
                     printf("\n********** Pergunta Pulada! **********\n\n");
                     nao_sortear_pergunta = 0;
+                    continue;
                 } else if (id_ajuda == 1) {
+                    gerar_votos_alternativas(30, 40, pergunta_atual.alt_correta);
+                    nao_sortear_pergunta = 1;
+                    continue;
                 } else if (id_ajuda == 2) {
+                    gerar_votos_alternativas(3, 70, pergunta_atual.alt_correta);
+                    nao_sortear_pergunta = 1;
+                    continue;
                 } else if (id_ajuda == 3) {                    
                     int carta_escolhida = ajuda_cartas(pergunta_atual);
                     pergunta_atual = retirar_resposta_incorreta(carta_escolhida, pergunta_atual);
 
-                    running = pergunta_atual_ajuda_cartas(pergunta_atual);
+                    running = pergunta_atual_ajuda(pergunta_atual);
                 }
             }
             else if (entrada == INPUT_A || entrada == INPUT_B || entrada == INPUT_C || entrada == INPUT_D)  {
@@ -240,7 +248,6 @@ void carregar_perguntas_por_nivel(pergunta *todas_perguntas, pergunta *perguntas
 }
 
 int sortear(int qtd) {
-
     return (rand() % qtd);
 }
 
@@ -362,12 +369,12 @@ pergunta retirar_resposta_incorreta(int quantidade_resposta_incorretas, pergunta
         }
     }
 
-    printf("\n%d resposta(s) incorreta(s) removida(s)!\n\n", quantidade_resposta_incorretas);
+    printf("\n%d respostas incorretas removidas!\n\n", quantidade_resposta_incorretas);
     
     return pergunta_atual;
 }
 
-int pergunta_atual_ajuda_cartas(pergunta pergunta_atual) {
+int pergunta_atual_ajuda(pergunta pergunta_atual) {
     char entrada;
     int running = 1;
 
@@ -396,5 +403,90 @@ int pergunta_atual_ajuda_cartas(pergunta pergunta_atual) {
     }
 
     return running;
+}
+
+void imprimir_votos_alternativas(int *votos_alternativas) {    
+    printf("\n-- Votos da Plateia --\n");
+    printf("A: %d votos\n", votos_alternativas[0]);
+    printf("B: %d votos\n", votos_alternativas[1]);
+    printf("C: %d votos\n", votos_alternativas[2]);
+    printf("D: %d votos\n", votos_alternativas[3]);
+    printf("~~~~~~~~~~~~~~~\n\n");
+}
+
+// void gerar_votos_alternativas(int qtd_votos, int percentual_correta, char alt_correta) {
+//     int sorteio;
+//     int votos_alternativas[4] = {0,0,0,0};
+//     int percentual_incorreta = (100 - percentual_correta) / 3;
+//     int contador = 1;
+
+//     for (int i = 0; i < qtd_votos; i++)
+//     {
+//         sorteio = sortear(100) + 1;
+
+//         if (sorteio <= percentual_correta) {
+//             votos_alternativas[0]++;
+//         }
+//         else if (sorteio <= percentual_correta + percentual_incorreta) {
+//             votos_alternativas[1]++;
+//         }
+//         else if (sorteio <= percentual_correta + (percentual_incorreta * 2)) {
+//             votos_alternativas[2]++;
+//         } 
+//         else {
+//             votos_alternativas[3]++;
+//         }
+//     }
+    
+//     imprimir_votos_alternativas(votos_alternativas);
+// }
+
+void gerar_votos_alternativas(int qtd_votos, int percentual_correta, char alt_correta) {
+    int i, sorteio;
+    int votos_alternativas[4] = {0, 0, 0, 0};
+    int alternativas[4] = { 'a', 'b', 'c', 'd' };
+        
+    int votos_corretos = 0;
+    int votos_incorretos[3] = {0,0,0};
+    
+    int restante = 100 - percentual_correta;
+    int percentual_base_incorreta = restante / 3;
+
+    int faixa_correta = percentual_correta;
+    int faixa_incorreta_1 = faixa_correta + percentual_base_incorreta;
+    int faixa_incorreta_2 = faixa_incorreta_1 + percentual_base_incorreta;
+    int faixa_incorreta_3 = faixa_incorreta_2 + percentual_base_incorreta;
+
+    for (i = 0; i < qtd_votos; i++) {
+        sorteio = sortear(100) + 1;
+
+        if (sorteio <= faixa_correta) {
+            votos_corretos++;
+        }
+        else if (sorteio <= faixa_incorreta_1) {
+            votos_incorretos[0]++;
+        }
+        else if (sorteio <= faixa_incorreta_2) {
+            votos_incorretos[1]++;
+        } 
+        else if (sorteio <= faixa_incorreta_3) {
+            votos_incorretos[2]++;
+        }
+    }
+        
+    int indice_correto = alt_correta;
+    
+    int indice_incorreta = 0;
+
+    for (i = 0; i < 4; i++) {
+        if (alternativas[i] == indice_correto) {
+            votos_alternativas[i] = votos_corretos;
+        } else {            
+            votos_alternativas[i] = votos_incorretos[indice_incorreta];
+            indice_incorreta++;
+        }
+    }
+
+    imprimir_votos_alternativas(votos_alternativas); 
 }
 #pragma endregion
