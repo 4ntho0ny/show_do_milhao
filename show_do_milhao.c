@@ -35,9 +35,14 @@ void imprimir_pergunta(pergunta pergunta);
 void eliminar_pergunta(pergunta *perguntas, int posicao_pergunta, int qtd_perguntas);
 void msg_derrota();
 void msg_vitoria();
+void msg_resposta_certa();
+void msg_resposta_invalida();
 void imprimir_ajuda(int *ajudas);
-void diminuir_quantidade_ajuda(int *ajudas, int id_ajuda);
+int diminuir_quantidade_ajuda(int *ajudas, int id_ajuda);
 int utilizar_ajuda(int *ajudas, int id_ajuda, pergunta pergunta_atual);
+int ajuda_cartas(pergunta pergunta_atual);
+void retirar_resposta_incorreta(int quantidade_resposta_incorretas, pergunta pergunta_atual);
+char ler_entrada();
 
 int main() {
     srand(time(0));
@@ -57,6 +62,7 @@ int main() {
     int nao_sortear_pergunta = 0;
     int ajudas[4] = {3,3,3,3};
     int ajuda_utilizada = 0;
+    int id_ajuda;
 
     float val_pergunta = 1000.0;
     float val_acumulado = 0.0;
@@ -90,7 +96,7 @@ int main() {
 
         while (qtd_perguntas_repondidas < qtd_respostas_nvl)
         {
-            if (nao_sortear_pergunta == 0) {
+            if (!nao_sortear_pergunta) {
                 pergunta_sorteada = sortear(qtd_perguntas_nvl);
                 pergunta_atual = perguntas_por_nivel[pergunta_sorteada];
             }
@@ -104,21 +110,38 @@ int main() {
             printf("~~~~~~~~~~~~~~~\n\n");
             // =======================================================
 
-            printf("Digite sua resposta: ");
-            scanf(" %c", &entrada);
-            
+            entrada = ler_entrada();
+
             if (entrada == INPUT_5) {
                 running = 0;
                 break;
             }
             else if (entrada == INPUT_1 || entrada == INPUT_2 || entrada == INPUT_3 || entrada == INPUT_4) {
+                id_ajuda = (int)(entrada - '0') - 1;                
 
-                ajuda_utilizada = utilizar_ajuda(ajudas, (int)(entrada - '0') - 1, pergunta_atual);
-                if (ajuda_utilizada == 0) {
+                if (!diminuir_quantidade_ajuda(ajudas, id_ajuda)) {
                     nao_sortear_pergunta = 1;
                     continue;
                 }
 
+                if (id_ajuda == 0) {
+                    printf("\n********** Pergunta Pulada! **********\n\n");
+                    nao_sortear_pergunta = 0;
+                } else if (id_ajuda == 1) {
+                } else if (id_ajuda == 2) {
+                } else if (id_ajuda == 3) {                    
+                    int carta_escolhida = ajuda_cartas(pergunta_atual);
+                    retirar_resposta_incorreta(carta_escolhida, pergunta_atual);
+
+                    entrada = ler_entrada();
+                    if (toupper(entrada) != toupper(pergunta_atual.alt_correta)) {
+                        msg_derrota();
+                        running = 0;
+                        break;
+                    }
+
+                    msg_resposta_certa();
+                }
             }
             else if (entrada == INPUT_A || entrada == INPUT_B || entrada == INPUT_C || entrada == INPUT_D)  {
 
@@ -128,10 +151,10 @@ int main() {
                     break;
                 }
 
-                printf("\n********** Certa Resposta! **********\n\n");
+                msg_resposta_certa();
             }
             else {
-                printf("\nXXXXXXXXX Entrada Invalida XXXXXXXXX\n\n");   
+                msg_resposta_invalida();
                 nao_sortear_pergunta = 1;
                 continue;
             }
@@ -169,11 +192,22 @@ int main() {
     return 0;
 }
 
-/*
-=================================================================
-=========================== FUNCTIONS ===========================
-=================================================================
-*/
+#pragma region FUNCTIONS
+
+void msg_resposta_invalida() {
+    printf("\nXXXXXXXXX Resposta Invalida XXXXXXXXX\n\n");
+}
+
+void msg_resposta_certa() {
+    printf("\n********** Certa Resposta! **********\n\n");
+}
+
+char ler_entrada() {
+    char entrada;
+    printf("Digite a entrada: ");
+    scanf(" %c", &entrada);
+    return entrada;
+}
 
 void carregar_perguntas(pergunta *perguntas) {
 
@@ -253,69 +287,78 @@ void imprimir_ajuda(int *ajudas) {
     printf("[5] Parar\n");
 }
 
-void diminuir_quantidade_ajuda(int *ajudas, int id_ajuda) {
-    
+int diminuir_quantidade_ajuda(int *ajudas, int id_ajuda) {
+    int ajuda_utilizada = 0;
+
     if (id_ajuda < 0 || id_ajuda > 3) {
         printf("Ajuda inválida.\n");
     }
     else if (ajudas[id_ajuda] > 0) {
         ajudas[id_ajuda]--;
         printf("\nAjuda %d utilizada. Restam %d.\n", id_ajuda + 1, ajudas[id_ajuda]);
+        ajuda_utilizada = 1;
     } else {
         printf("\nXXXXXXXXX Voce ja utilizou todas as ajudas da opcao %d. XXXXXXXXX\n", id_ajuda + 1);
     }
 
     printf("\n");
-}
-
-int utilizar_ajuda(int *ajudas, int id_ajuda, pergunta pergunta_atual) {
-    int ajuda_utilizada = 0;
-
-    if (id_ajuda == 0 && ajudas[id_ajuda] > 0) {
-        printf("\n********** Pergunta Pulada! **********\n\n");
-        ajuda_utilizada = 1;
-    } else if (id_ajuda == 2 && ajudas[id_ajuda] > 0) {
-        ajuda_utilizada = 1;
-    } else if (id_ajuda == 3 && ajudas[id_ajuda] > 0) {
-        ajuda_utilizada = 1;
-    } else if (id_ajuda == 4 && ajudas[id_ajuda] > 0) {
-        ajuda_utilizada = 1;
-    }
-
-    diminuir_quantidade_ajuda(ajudas, id_ajuda);
 
     return ajuda_utilizada;
 }
 
-// void desenhar_cartas() {
-//     printf(" _______   _______   _______   _______\n");
-//     printf("|       | |       | |       | |       |\n");
-//     printf("|       | |       | |       | |       |\n");
-//     printf("|       | |       | |       | |       |\n");
-//     printf("|_______| |_______| |_______| |_______|\n");
-//     printf("    1         2         3         4   \n");
-// }
+void desenhar_cartas() {
+    printf("\n********** Ajuda das Cartas **********\n\n");
+    printf(" _______   _______   _______   _______\n");
+    printf("|       | |       | |       | |       |\n");
+    printf("|       | |       | |       | |       |\n");
+    printf("|       | |       | |       | |       |\n");
+    printf("|_______| |_______| |_______| |_______|\n");
+    printf("    1         2         3         4   \n");
+}
 
-// void sortear_cartas(int *cartas) {
-//     int numero_respostas_tiradas;
-//     for (int i = 0; i < 4; i++)
-//     {
-//         numero_respostas_tiradas = sortear(4);
-//         cartas[i] = numero_respostas_tiradas;
-//     }
+void sortear_cartas(int *cartas) {
+    int numero_respostas_tiradas;
+    for (int i = 0; i < 4; i++)
+    {
+        numero_respostas_tiradas = sortear(4);
+        cartas[i] = numero_respostas_tiradas;
+        // printf("Carta %d: %d respostas incorretas retiradas\n", i + 1, numero_respostas_tiradas);
+    }
     
-// };
+};
 
-// void ajuda_cartas(pergunta pergunta_atual) {
-//     int cartas[4] = (int *) malloc(4 * sizeof(int));
-//     int carta_escolhida;
-//     sortear_cartas(cartas);
+int ajuda_cartas(pergunta pergunta_atual) {
+    int *cartas = (int *) malloc(4 * sizeof(int));
+    int carta_escolhida;
 
-//     printf("\n********** Ajuda das Cartas **********\n\n");
-//     desenhar_cartas();
-//     printf("Escolha uma carta (1-4): ");
-//     scanf("%d", &carta_escolhida);
+    sortear_cartas(cartas);
 
+    desenhar_cartas();
+    printf("Escolha uma carta (1-4): ");
+    scanf("%d", &carta_escolhida);
 
+    return cartas[carta_escolhida - 1];
+}
 
-// }
+void retirar_resposta_incorreta(int quantidade_resposta_incorretas, pergunta pergunta_atual) {
+    int respostas_removidas = 0;
+
+    while (respostas_removidas < quantidade_resposta_incorretas) {
+        int indice = sortear(4);
+
+        if ('a' + indice != pergunta_atual.alt_correta && pergunta_atual.alt[indice][0] != '\0') {
+            pergunta_atual.alt[indice][0] = '\0';
+            respostas_removidas++;
+        }
+    }
+
+    printf("%s\n", pergunta_atual.descricao);
+    for (int i = 0; i < 4; i++) {
+        if (pergunta_atual.alt[i][0] != '\0') {
+            printf(" %c) %s\n", 'a' + i, pergunta_atual.alt[i]);
+        }
+    }
+    printf("\n");
+}
+
+#pragma endregion
